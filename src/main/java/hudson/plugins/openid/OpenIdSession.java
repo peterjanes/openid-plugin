@@ -27,7 +27,7 @@ import com.cloudbees.openid4java.team.TeamExtensionFactory;
 import com.cloudbees.openid4java.team.TeamExtensionRequest;
 import hudson.model.Failure;
 import hudson.model.Hudson;
-import org.acegisecurity.GrantedAuthorityImpl;
+import org.springframework.security.GrantedAuthorityImpl;
 import org.kohsuke.stapler.HttpRedirect;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.Stapler;

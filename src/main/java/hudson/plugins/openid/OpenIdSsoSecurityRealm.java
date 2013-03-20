@@ -31,14 +31,14 @@ import hudson.model.Hudson;
 import hudson.model.User;
 import hudson.security.SecurityRealm;
 import hudson.util.FormValidation;
-import org.acegisecurity.Authentication;
-import org.acegisecurity.AuthenticationException;
-import org.acegisecurity.AuthenticationManager;
-import org.acegisecurity.BadCredentialsException;
-import org.acegisecurity.GrantedAuthority;
-import org.acegisecurity.context.SecurityContextHolder;
-import org.acegisecurity.providers.UsernamePasswordAuthenticationToken;
-import org.acegisecurity.providers.anonymous.AnonymousAuthenticationToken;
+import org.springframework.security.Authentication;
+import org.springframework.security.AuthenticationException;
+import org.springframework.security.AuthenticationManager;
+import org.springframework.security.BadCredentialsException;
+import org.springframework.security.GrantedAuthority;
+import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.security.providers.UsernamePasswordAuthenticationToken;
+import org.springframework.security.providers.anonymous.AnonymousAuthenticationToken;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.Header;
 import org.kohsuke.stapler.HttpRedirect;
@@ -61,7 +61,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 
-import jenkins.model.Jenkins;
+import hudson.model.Hudson;
 
 /**
  * SSO based on OpenID by fixing a provider.
@@ -101,7 +101,7 @@ public class OpenIdSsoSecurityRealm extends SecurityRealm {
 
     protected ConsumerManager createManager() throws ConsumerException {
         final Hudson instance = Hudson.getInstance();
-        if (instance.proxy != null) {
+        if (instance.proxy != null && instance.proxy.name != null) {
             ProxyProperties props = new ProxyProperties();
             props.setProxyHostName(instance.proxy.name);
             props.setProxyPort(instance.proxy.port);
@@ -165,7 +165,7 @@ public class OpenIdSsoSecurityRealm extends SecurityRealm {
             if (Stapler.getCurrentRequest().getHeader("Referer") != null) {
                 from = Stapler.getCurrentRequest().getHeader("Referer");
             } else {
-                from = Jenkins.getInstance().getRootUrl();
+                from = Hudson.getInstance().getRootUrl();
             }
         }
         

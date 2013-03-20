@@ -29,7 +29,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimaps;
 import hudson.model.User;
 import hudson.tasks.Mailer;
-import org.acegisecurity.GrantedAuthority;
+import org.springframework.security.GrantedAuthority;
 import org.openid4java.OpenIDException;
 import org.openid4java.message.AuthSuccess;
 

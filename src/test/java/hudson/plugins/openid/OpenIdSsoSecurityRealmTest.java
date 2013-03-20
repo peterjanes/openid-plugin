@@ -27,15 +27,23 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import hudson.model.RootAction;
 import hudson.model.User;
-import org.acegisecurity.Authentication;
-import org.acegisecurity.GrantedAuthority;
-import org.acegisecurity.context.SecurityContextHolder;
-import org.acegisecurity.providers.UsernamePasswordAuthenticationToken;
+import org.jvnet.hudson.test.ClosureExecuterAction;
+import org.kohsuke.stapler.Stapler;
+import org.kohsuke.stapler.StaplerResponse;
+import org.springframework.security.Authentication;
+import org.springframework.security.GrantedAuthority;
+import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.security.providers.UsernamePasswordAuthenticationToken;
 import org.jvnet.hudson.test.HudsonTestCase;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 
 import static hudson.plugins.openid.OpenIdTestService.*;
@@ -58,7 +66,7 @@ public class OpenIdSsoSecurityRealmTest extends OpenIdTestCase {
 
         assertNotNull(top.getAnchorByHref("/user/" + userName));
 
-        Authentication a = wc.executeOnServer(new Callable<Authentication>() {
+        Authentication a = executeOnServer(wc, new Callable<Authentication>() {
             public Authentication call() throws Exception {
                 return SecurityContextHolder.getContext().getAuthentication();
             }
@@ -75,6 +83,31 @@ public class OpenIdSsoSecurityRealmTest extends OpenIdTestCase {
 
         assertEquals(1, p.getIdentifiers().size());
         assertEquals(openid.getUserIdentity(), p.getIdentifiers().iterator().next());
+    }
+
+    private <V> V executeOnServer(final WebClient wc, final Callable<V> c) throws Exception {
+        final Exception[] t = new Exception[1];
+        final List<V> r = new ArrayList<V>(1);
+
+        ClosureExecuterAction cea = hudson.getExtensionList(RootAction.class).get(ClosureExecuterAction.class);
+        UUID id = UUID.randomUUID();
+        cea.add(id, new Runnable() {
+            public void run() {
+                try {
+                    StaplerResponse rsp = Stapler.getCurrentResponse();
+                    rsp.setStatus(200);
+                    rsp.setContentType("text/html");
+                    r.add(c.call());
+                } catch (Exception e) {
+                    t[0] = e;
+                }
+            }
+        });
+        wc.goTo("closures/?uuid="+id);
+
+        if (t[0]!=null)
+            throw t[0];
+        return r.get(0);
     }
 
     private boolean isTeamAGrantedAuthority(GrantedAuthority[] gas, String team) {
